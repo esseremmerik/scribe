@@ -348,6 +348,29 @@ class OpenAPISpecWriter
                 ];
 
             case 'array':
+                $properties = collect($decoded)->mapWithKeys(function ($value, $key) use ($endpoint) {
+                    $spec = [
+                        // Note that we aren't recursing for nested objects. We stop at one level.
+                        'type' => $this->convertScribeOrPHPTypeToOpenAPIType(gettype($value)),
+                        'example' => $value,
+
+                    ];
+                    if (isset($endpoint->responseFields[$key]->description)) {
+                        $spec['description'] = $endpoint->responseFields[$key]->description;
+                    }
+                    if ($spec['type'] === 'array' && !empty($value)) {
+                        $spec['items']['type'] = $this->convertScribeOrPHPTypeToOpenAPIType(gettype($value[0]));
+                    }
+
+                    return [
+                        $key => $spec,
+                    ];
+                })->toArray();
+
+                if (!count($properties)) {
+                    $properties = $this->EMPTY;
+                }
+
                 if (!count($decoded)) {
                     // empty array
                     return [
@@ -358,6 +381,7 @@ class OpenAPISpecWriter
                                     'type' => 'object', // No better idea what to put here
                                 ],
                                 'example' => $decoded,
+                                'properties' => $properties,
                             ],
                         ],
                     ];
@@ -372,6 +396,7 @@ class OpenAPISpecWriter
                                 'type' => $this->convertScribeOrPHPTypeToOpenAPIType(gettype($decoded[0])),
                             ],
                             'example' => $decoded,
+                            'properties' => $properties,
                         ],
                     ],
                 ];
