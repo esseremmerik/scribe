@@ -348,7 +348,7 @@ class OpenAPISpecWriter
                 ];
 
             case 'array':
-                $properties = collect($decoded)->mapWithKeys(function ($value, $key) use ($endpoint) {
+                $properties = collect(Arr::first($decoded))->mapWithKeys(function ($value, $key) use ($endpoint) {
                     $spec = [
                         // Note that we aren't recursing for nested objects. We stop at one level.
                         'type' => $this->convertScribeOrPHPTypeToOpenAPIType(gettype($value)),
